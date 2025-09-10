@@ -3,8 +3,7 @@
  * communicate with the backend microservices (key-service and routing-service).
  * These contracts decouple the core application logic from the network layer.
  */
-
-import {SecureEnvelope} from "../types/models.ts";
+import type {SecureEnvelope} from "@/types/models";
 
 /**
  * Defines the contract for a client that interacts with the key-service.
@@ -38,4 +37,9 @@ export interface RoutingClient {
      * @returns A promise that resolves when the envelope has been accepted by the service.
      */
     send(envelope: SecureEnvelope): Promise<void>;
+
+    receive(userId: string): Promise<SecureEnvelope[]>;
 }
+
+// Add a dummy export that generates code
+export const version = '1.0.0';

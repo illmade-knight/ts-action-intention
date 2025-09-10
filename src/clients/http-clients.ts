@@ -2,13 +2,8 @@
  * @fileoverview This file contains the concrete implementations of the KeyClient
  * and RoutingClient interfaces, using the browser's fetch API for HTTP requests.
  */
-
-/**
- * @fileoverview This file contains the concrete implementations of the KeyClient
- * and RoutingClient interfaces, using the browser's fetch API for HTTP requests.
- */
-import type {KeyClient, RoutingClient} from './provider.js';
-import type {SecureEnvelope} from '../types/models.ts';
+import type {KeyClient, RoutingClient} from './provider';
+import type {SecureEnvelope} from '@/types/models';
 
 /**
  * An implementation of the KeyClient that communicates with the go-key-service.
@@ -47,12 +42,14 @@ export class KeyClientImpl implements KeyClient {
      * @returns A promise that resolves when the operation is complete.
      */
     async storeKey(userId: string, key: Uint8Array): Promise<void> {
+        const keyBuffer = new Uint8Array(key);
+
         const response = await fetch(`${this.baseURL}/keys/${userId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/octet-stream',
             },
-            body: key,
+            body: keyBuffer,
         });
 
         if (!response.ok) {
@@ -92,5 +89,27 @@ export class RoutingClientImpl implements RoutingClient {
         if (!response.ok) {
             throw new Error('Failed to send envelope');
         }
+    }
+
+    /**
+     * Fetches all secure envelopes for a user from the routing service.
+     * @param userId - The ID of the user whose messages are to be fetched.
+     * @returns A promise that resolves with an array of SecureEnvelopes.
+     */
+    async receive(userId: string): Promise<SecureEnvelope[]> {
+        // REFACTOR: Update the URL and add the required X-User-ID header for authentication.
+        const response = await fetch(`${this.baseURL}/messages`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-ID': userId,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch messages');
+        }
+
+        return response.json();
     }
 }

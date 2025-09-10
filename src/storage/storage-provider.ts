@@ -7,7 +7,7 @@
  * @fileoverview This file defines the abstract interfaces for storage and
  * authentication providers, enabling a "bring your own storage" model.
  */
-import type {ApplicationState} from '@/types/models.ts';
+import type {ApplicationState} from '@/types/models';
 
 /**
  * Represents the metadata for a file stored by a provider.

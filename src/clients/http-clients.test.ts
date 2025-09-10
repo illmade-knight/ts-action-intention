@@ -42,10 +42,12 @@ describe('RoutingClientImpl', () => {
     });
 
     test('send should POST the secure envelope to the routing service', async () => {
+        // CORRECTED: The envelope now uses the proper camelCase fields.
         const envelope: SecureEnvelope = {
             senderId: 'sender-1',
             recipientId: 'recipient-1',
-            encryptedPayload: 'encrypted-data',
+            encryptedSymmetricKey: 'base64-encrypted-key',
+            encryptedData: 'base64-encrypted-data',
             signature: 'signature-data',
         };
 
@@ -60,14 +62,15 @@ describe('RoutingClientImpl', () => {
             })
         );
 
+        // CORRECTED: The envelope now uses the proper camelCase fields.
         const envelope: SecureEnvelope = {
             senderId: 'sender-1',
             recipientId: 'recipient-1',
-            encryptedPayload: 'encrypted-data',
+            encryptedSymmetricKey: 'base64-encrypted-key',
+            encryptedData: 'base64-encrypted-data',
             signature: 'signature-data',
         };
 
-        // The client and URL are now the same as the success test
         await expect(routingClient.send(envelope)).rejects.toThrow('Failed to send envelope');
     });
 });

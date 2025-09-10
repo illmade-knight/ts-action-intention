@@ -119,7 +119,10 @@ export interface ApplicationState {
 export interface SecureEnvelope {
     senderId: string;
     recipientId: string;
-    encryptedPayload: string; // Typically base64 encoded ciphertext
-    signature: string; // Typically base64 encoded signature
+    encryptedSymmetricKey: string; // Base64 encoded
+    encryptedData: string; // base64 encoded ciphertext
+    signature: string; // base64 encoded signature
 }
 
+// Add a dummy export that generates code
+export const version = '1.0.0';

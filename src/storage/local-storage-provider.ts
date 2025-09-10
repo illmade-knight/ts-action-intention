@@ -2,13 +2,8 @@
  * @fileoverview This file contains the implementation of the LocalStorageProvider,
  * which uses the browser's localStorage API to persist the application state.
  */
-
-/**
- * @fileoverview This file contains the implementation of the LocalStorageProvider,
- * which uses the browser's localStorage API to persist the application state.
- */
-import type {StorageProvider, FileManifest} from '@/storage/storage-provider';
-import type {ApplicationState} from '@/types/models';
+import type {StorageProvider, FileManifest} from './storage-provider';
+import type {ApplicationState, Intention, Location, Person} from '@/types/models';
 
 /**
  * A storage provider that saves the application state to the browser's
@@ -52,15 +47,15 @@ export class LocalStorageProvider implements StorageProvider {
 
         // Revive all date strings back into Date objects.
         state.meta.createdAt = new Date(state.meta.createdAt);
-        state.intentions.forEach(intention => {
+        state.intentions.forEach((intention: Intention) => {
             intention.createdAt = new Date(intention.createdAt);
             intention.startTime = new Date(intention.startTime);
             intention.endTime = new Date(intention.endTime);
         });
-        state.locations.forEach(location => {
+        state.locations.forEach((location: Location) => {
             location.createdAt = new Date(location.createdAt);
         });
-        state.people.forEach(person => {
+        state.people.forEach((person: Person) => {
             person.createdAt = new Date(person.createdAt);
         });
 

@@ -6,6 +6,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
 
+    "preserveSymlinks": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -15,7 +16,8 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "ts-action-intention": ["./node_modules/ts-action-intention/dist/fesm2020/ts-action-intention.mjs"]
     },
 
     /* Linting */

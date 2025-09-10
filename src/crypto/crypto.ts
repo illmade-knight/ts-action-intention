@@ -4,6 +4,11 @@
  * platform-agnostic Web Crypto API.
  */
 
+// Define a return type for the updated encrypt function for clarity
+export interface EncryptedPayload {
+    encryptedSymmetricKey: Uint8Array;
+    encryptedData: Uint8Array;
+}
 /**
  * A class that encapsulates cryptographic operations using the Web Crypto API.
  */
@@ -55,46 +60,51 @@ export class Crypto {
      * Encrypts a plaintext payload using a hybrid encryption scheme.
      * @param publicKey - The recipient's public RSA-OAEP key.
      * @param plaintext - The data to encrypt as a Uint8Array.
-     * @returns A promise that resolves with the encrypted data as a Uint8Array.
+     * @returns A promise that resolves with an EncryptedPayload object.
      */
-    async encrypt(publicKey: CryptoKey, plaintext: Uint8Array): Promise<Uint8Array> {
+    async encrypt(publicKey: CryptoKey, plaintext: Uint8Array): Promise<EncryptedPayload> {
+        // 1. Generate a temporary symmetric key for this message only
         const aesKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
             'encrypt',
             'decrypt',
         ]);
 
+        // 2. Encrypt the data with the AES key
         const iv = crypto.getRandomValues(new Uint8Array(12));
-
-        const encryptedData = await crypto.subtle.encrypt(
-            { name: 'AES-GCM', iv: iv },
+        const encryptedContent = await crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv },
             aesKey,
             plaintext
         );
 
+        // Prepend the IV to the ciphertext, as it's needed for decryption
+        const encryptedData = new Uint8Array(iv.length + encryptedContent.byteLength);
+        encryptedData.set(iv, 0);
+        encryptedData.set(new Uint8Array(encryptedContent), iv.length);
+
+        // 3. Encrypt the symmetric AES key with the recipient's public RSA key
         const exportedAesKey = await crypto.subtle.exportKey('raw', aesKey);
-        const encryptedAesKey = await crypto.subtle.encrypt(this.rsaOaepParams, publicKey, exportedAesKey);
+        const encryptedSymmetricKey = await crypto.subtle.encrypt(this.rsaOaepParams, publicKey, exportedAesKey);
 
-        const result = new Uint8Array(iv.length + encryptedAesKey.byteLength + encryptedData.byteLength);
-        result.set(iv, 0);
-        result.set(new Uint8Array(encryptedAesKey), iv.length);
-        result.set(new Uint8Array(encryptedData), iv.length + encryptedAesKey.byteLength);
-
-        return result;
+        return {
+            encryptedSymmetricKey: new Uint8Array(encryptedSymmetricKey),
+            encryptedData: encryptedData,
+        };
     }
 
     /**
-     * Decrypts ciphertext using a hybrid decryption scheme.
+     * REFACTORED: This method now accepts separate arguments for the encrypted
+     * symmetric key and the encrypted data payload, matching the output of encrypt().
      * @param privateKey - The user's private RSA-OAEP key.
-     * @param ciphertext - The combined IV, encrypted key, and data.
+     * @param encryptedSymmetricKey - The RSA-encrypted AES key.
+     * @param encryptedData - The AES-encrypted data, prepended with its IV.
      * @returns A promise that resolves with the decrypted plaintext as a Uint8Array.
      */
-    async decrypt(privateKey: CryptoKey, ciphertext: Uint8Array): Promise<Uint8Array> {
-        const iv = ciphertext.slice(0, 12);
-        const encryptedAesKey = ciphertext.slice(12, 12 + 256);
-        const encryptedData = ciphertext.slice(12 + 256);
+    async decrypt(privateKey: CryptoKey, encryptedSymmetricKey: Uint8Array, encryptedData: Uint8Array): Promise<Uint8Array> {
+        // 1. Decrypt the symmetric AES key using our private RSA key
+        const decryptedAesKeyBytes = await crypto.subtle.decrypt(this.rsaOaepParams, privateKey, encryptedSymmetricKey);
 
-        const decryptedAesKeyBytes = await crypto.subtle.decrypt(this.rsaOaepParams, privateKey, encryptedAesKey);
-
+        // 2. Import the raw AES key so we can use it for decryption
         const aesKey = await crypto.subtle.importKey(
             'raw',
             decryptedAesKeyBytes,
@@ -103,10 +113,15 @@ export class Crypto {
             ['decrypt'],
         );
 
+        // 3. Separate the IV from the actual ciphertext
+        const iv = encryptedData.slice(0, 12);
+        const ciphertext = encryptedData.slice(12);
+
+        // 4. Decrypt the data using the recovered AES key and IV
         const decryptedData = await crypto.subtle.decrypt(
             { name: 'AES-GCM', iv: iv },
             aesKey,
-            encryptedData
+            ciphertext
         );
 
         return new Uint8Array(decryptedData);
