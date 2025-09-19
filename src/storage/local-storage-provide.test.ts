@@ -8,7 +8,7 @@
 import { describe, test, expect, beforeAll, beforeEach, vi } from 'vitest';
 
 // Import using the new absolute path aliases
-import { LocalStorageProvider } from '@/storage/local-storage-provider';
+import {LocalStorageProvider} from '@/storage/local-storage-provider';
 import type {StorageProvider} from '@/storage/storage-provider';
 import type {ApplicationState} from '@/types/models';
 

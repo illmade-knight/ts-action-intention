@@ -1,6 +1,6 @@
 // in ts-action-intention/src/storage/local-storage-key-store.ts
 
-import { KeyStore } from './key-store';
+import type {KeyStore} from "@/storage/key-store.ts";
 
 export class LocalStorageKeyStore implements KeyStore {
     async saveKeyPair(userId: string, keyPair: CryptoKeyPair): Promise<void> {

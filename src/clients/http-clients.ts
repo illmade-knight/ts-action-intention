@@ -4,6 +4,7 @@
  */
 import type {KeyClient, RoutingClient} from './provider';
 import type {SecureEnvelope} from '@/types/models';
+import type {URN} from "@/types/urn.ts";
 
 /**
  * An implementation of the KeyClient that communicates with the go-key-service.
@@ -24,8 +25,9 @@ export class KeyClientImpl implements KeyClient {
      * @param userId - The ID of the user whose key is to be fetched.
      * @returns A promise that resolves with the public key as a Uint8Array.
      */
-    async getKey(userId: string): Promise<Uint8Array> {
-        const response = await fetch(`${this.baseURL}/keys/${userId}`);
+    async getKey(userId: URN): Promise<Uint8Array> {
+
+        const response = await fetch(`${this.baseURL}/keys/${userId.toString()}`);
 
         if (!response.ok) {
             throw new Error(`Failed to fetch key for user ${userId}`);
@@ -41,10 +43,10 @@ export class KeyClientImpl implements KeyClient {
      * @param key - The public key as a Uint8Array.
      * @returns A promise that resolves when the operation is complete.
      */
-    async storeKey(userId: string, key: Uint8Array): Promise<void> {
+    async storeKey(userId: URN, key: Uint8Array): Promise<void> {
         const keyBuffer = new Uint8Array(key);
 
-        const response = await fetch(`${this.baseURL}/keys/${userId}`, {
+        const response = await fetch(`${this.baseURL}/keys/${userId.toString()}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/octet-stream',
@@ -96,13 +98,13 @@ export class RoutingClientImpl implements RoutingClient {
      * @param userId - The ID of the user whose messages are to be fetched.
      * @returns A promise that resolves with an array of SecureEnvelopes.
      */
-    async receive(userId: string): Promise<SecureEnvelope[]> {
+    async receive(userId: URN): Promise<SecureEnvelope[]> {
         // REFACTOR: Update the URL and add the required X-User-ID header for authentication.
         const response = await fetch(`${this.baseURL}/messages`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'X-User-ID': userId,
+                'X-User-ID': userId.toString(),
             },
         });
 
