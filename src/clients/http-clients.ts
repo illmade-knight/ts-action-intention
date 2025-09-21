@@ -2,9 +2,9 @@
  * @fileoverview This file contains the concrete implementations of the KeyClient
  * and RoutingClient interfaces, using the browser's fetch API for HTTP requests.
  */
-import type {KeyClient, RoutingClient} from './provider';
-import type {SecureEnvelope} from '@/types/models';
-import type {URN} from "@/types/urn.ts";
+import type { KeyClient, RoutingClient } from './provider';
+import type { SecureEnvelope } from '../types/models';
+import type { URN } from "../types/urn";
 
 /**
  * An implementation of the KeyClient that communicates with the go-key-service.
@@ -12,48 +12,26 @@ import type {URN} from "@/types/urn.ts";
 export class KeyClientImpl implements KeyClient {
     private baseURL: string;
 
-    /**
-     * Creates a new KeyClientImpl.
-     * @param baseURL - The base URL of the key service.
-     */
     constructor(baseURL: string) {
         this.baseURL = baseURL;
     }
 
-    /**
-     * Fetches a user's public key from the key service.
-     * @param userId - The ID of the user whose key is to be fetched.
-     * @returns A promise that resolves with the public key as a Uint8Array.
-     */
     async getKey(userId: URN): Promise<Uint8Array> {
-
         const response = await fetch(`${this.baseURL}/keys/${userId.toString()}`);
-
         if (!response.ok) {
             throw new Error(`Failed to fetch key for user ${userId}`);
         }
-
         const buffer = await response.arrayBuffer();
         return new Uint8Array(buffer);
     }
 
-    /**
-     * Stores a user's public key in the key service.
-     * @param userId - The ID of the user whose key is to be stored.
-     * @param key - The public key as a Uint8Array.
-     * @returns A promise that resolves when the operation is complete.
-     */
     async storeKey(userId: URN, key: Uint8Array): Promise<void> {
         const keyBuffer = new Uint8Array(key);
-
         const response = await fetch(`${this.baseURL}/keys/${userId.toString()}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/octet-stream',
-            },
+            headers: { 'Content-Type': 'application/octet-stream' },
             body: keyBuffer,
         });
-
         if (!response.ok) {
             throw new Error(`Failed to store key for user ${userId}`);
         }
@@ -66,28 +44,16 @@ export class KeyClientImpl implements KeyClient {
 export class RoutingClientImpl implements RoutingClient {
     private baseURL: string;
 
-    /**
-     * Creates a new RoutingClientImpl.
-     * @param baseURL - The base URL of the routing service.
-     */
     constructor(baseURL: string) {
         this.baseURL = baseURL;
     }
 
-    /**
-     * Sends a secure envelope to the routing service.
-     * @param envelope - The SecureEnvelope to be sent.
-     * @returns A promise that resolves when the operation is complete.
-     */
     async send(envelope: SecureEnvelope): Promise<void> {
         const response = await fetch(`${this.baseURL}/send`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(envelope),
         });
-
         if (!response.ok) {
             throw new Error('Failed to send envelope');
         }
@@ -95,11 +61,11 @@ export class RoutingClientImpl implements RoutingClient {
 
     /**
      * Fetches all secure envelopes for a user from the routing service.
-     * @param userId - The ID of the user whose messages are to be fetched.
-     * @returns A promise that resolves with an array of SecureEnvelopes.
      */
     async receive(userId: URN): Promise<SecureEnvelope[]> {
-        // REFACTOR: Update the URL and add the required X-User-ID header for authentication.
+
+        console.log("getting envelope")
+
         const response = await fetch(`${this.baseURL}/messages`, {
             method: 'GET',
             headers: {
@@ -109,9 +75,11 @@ export class RoutingClientImpl implements RoutingClient {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch messages');
+            throw new Error(`Failed to fetch messages. Status: ${response.status}`);
         }
 
-        return response.json();
+        // Only if the response is successful AND has a body do we parse it.
+        return response.status === 204 ? [] : response.json();
     }
 }
+
