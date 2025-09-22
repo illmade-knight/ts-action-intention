@@ -1,13 +1,9 @@
 /**
  * @fileoverview This file defines the abstract interfaces for storage and
- * authentication providers, enabling a "bring your own storage" model.
+ * authentication providers. The StorageProvider is now a unified interface
+ * for all application persistence needs.
  */
-
-/**
- * @fileoverview This file defines the abstract interfaces for storage and
- * authentication providers, enabling a "bring your own storage" model.
- */
-import type {ApplicationState} from '@/types/models';
+import type { ApplicationState } from '@/types/models';
 
 /**
  * Represents the metadata for a file stored by a provider.
@@ -47,6 +43,15 @@ export interface StorageProvider {
      * @returns A promise that resolves when the write operation is complete.
      */
     writeFile(path: string, state: ApplicationState): Promise<void>;
+
+    /** Saves a key pair for a given user ID. */
+    saveKeyPair(userId: string, keyPair: CryptoKeyPair): Promise<void>; //
+
+    /** Loads a key pair for a given user ID. */
+    loadKeyPair(userId: string): Promise<CryptoKeyPair | null>; //
+
+    /** Deletes a key pair for a given user ID. */
+    deleteKeyPair(userId: string): Promise<void>; //
 }
 
 /**
@@ -76,4 +81,3 @@ export interface AuthProvider {
      */
     isAuthenticated(): Promise<boolean>;
 }
-

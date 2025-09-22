@@ -1,7 +1,7 @@
 // src/mocks/server.ts
 import {http, HttpResponse} from 'msw';
 import {setupServer} from 'msw/node';
-import {URN} from "@/types/urn.ts";
+import {URN} from "@illmade-knight/action-intention-protos";
 
 // Use a shared in-memory store to simulate persistence across tests
 const keyStore: Record<string, Uint8Array> = {

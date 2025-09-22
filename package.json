@@ -10,7 +10,11 @@
     "preview": "vite preview",
     "test": "vitest"
   },
+  "dependencies": {
+    "@illmade-knight/action-intention-protos": "^1.0.15"
+  },
   "devDependencies": {
+    "@bufbuild/protobuf": "^2.9.0",
     "@types/node": "^24.3.1",
     "@vitest/ui": "^3.2.4",
     "jsdom": "^26.1.0",

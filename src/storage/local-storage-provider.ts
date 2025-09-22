@@ -1,12 +1,13 @@
 /**
  * @fileoverview This file contains the implementation of the LocalStorageProvider,
- * which uses the browser's localStorage API to persist the application state.
+ * which uses the browser's localStorage API to persist the complete
+ * application state, including cryptographic keys.
  */
-import type {StorageProvider, FileManifest} from './storage-provider';
-import type {ApplicationState, Intention, Location, Person} from '@/types/models';
+import type { StorageProvider, FileManifest } from './storage-provider';
+import type { ApplicationState, Intention, Location, Person } from '@/types/models';
 
 /**
- * A storage provider that saves the application state to the browser's
+ * A storage provider that saves all application data to the browser's
  * local storage.
  */
 export class LocalStorageProvider implements StorageProvider {
@@ -20,17 +21,13 @@ export class LocalStorageProvider implements StorageProvider {
         if (!item) {
             return null;
         }
-
-        // Parse the state to get the creation date from the metadata.
         const state = JSON.parse(item);
-
         return {
             path,
             size: item.length,
-            // Revive the date string back into a Date object.
             lastModified: new Date(state.meta.createdAt),
         };
-    }
+    } //
 
     /**
      * Reads and parses the application state from localStorage.
@@ -42,10 +39,7 @@ export class LocalStorageProvider implements StorageProvider {
         if (!item) {
             throw new Error('File not found in localStorage');
         }
-
         const state: ApplicationState = JSON.parse(item);
-
-        // Revive all date strings back into Date objects.
         state.meta.createdAt = new Date(state.meta.createdAt);
         state.intentions.forEach((intention: Intention) => {
             intention.createdAt = new Date(intention.createdAt);
@@ -58,9 +52,8 @@ export class LocalStorageProvider implements StorageProvider {
         state.people.forEach((person: Person) => {
             person.createdAt = new Date(person.createdAt);
         });
-
         return state;
-    }
+    } //
 
     /**
      * Serializes and writes the application state to localStorage.
@@ -69,9 +62,47 @@ export class LocalStorageProvider implements StorageProvider {
      * @returns A promise that resolves when the write operation is complete.
      */
     async writeFile(path: string, state: ApplicationState): Promise<void> {
-        // Using JSON.stringify will convert Date objects to ISO strings.
         const serializedState = JSON.stringify(state);
         window.localStorage.setItem(path, serializedState);
-    }
-}
+    } //
 
+    /**
+     * Saves a key pair for a given user ID to localStorage.
+     */
+    async saveKeyPair(userId: string, keyPair: CryptoKeyPair): Promise<void> {
+        const publicKeyJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
+        const privateKeyJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
+        const storableKeyPair = {
+            publicKey: publicKeyJwk,
+            privateKey: privateKeyJwk,
+        };
+        localStorage.setItem(`crypto_keys_${userId}`, JSON.stringify(storableKeyPair));
+    } //
+
+    /**
+     * Loads a key pair for a given user ID from localStorage.
+     */
+    async loadKeyPair(userId: string): Promise<CryptoKeyPair | null> {
+        const stored = localStorage.getItem(`crypto_keys_${userId}`);
+        if (!stored) {
+            return null;
+        }
+        try {
+            const jwkKeyPair = JSON.parse(stored);
+            const publicKey = await crypto.subtle.importKey('jwk', jwkKeyPair.publicKey, { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['encrypt']);
+            const privateKey = await crypto.subtle.importKey('jwk', jwkKeyPair.privateKey, { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['decrypt']);
+            return { publicKey, privateKey };
+        } catch (error) {
+            console.error('Failed to load or parse stored key, treating as missing:', error);
+            localStorage.removeItem(`crypto_keys_${userId}`);
+            return null;
+        }
+    } //
+
+    /**
+     * Deletes a key pair for a given user ID from localStorage.
+     */
+    async deleteKeyPair(userId: string): Promise<void> {
+        localStorage.removeItem(`crypto_keys_${userId}`);
+    } //
+}

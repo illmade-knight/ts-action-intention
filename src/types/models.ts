@@ -2,9 +2,6 @@
  * @fileoverview This file contains all the foundational TypeScript interfaces
  * and type definitions for the action-intention application.
  */
-// --- Core Data Models ---
-
-import type {URN} from "@/types/urn.ts";
 
 /**
  * Represents the type of a Location, distinguishing between user-owned and shared.
@@ -110,30 +107,6 @@ export interface ApplicationState {
     intentions: Intention[];
     user: User;
     meta: Meta;
-}
-
-// --- Networking Models ---
-
-/**
- * Represents the secure data packet sent between users via the routing service.
- */
-export interface SecureEnvelope {
-    /** The URN of the message sender. */
-    senderId: URN;
-
-    /** The URN of the message recipient. */
-    recipientId: URN;
-
-    messageId?: string;
-
-    /** The AES-encrypted SharedPayload. */
-    encryptedData: Uint8Array;
-
-    /** The RSA-encrypted AES symmetric key. */
-    encryptedSymmetricKey: Uint8Array;
-
-    /** The signature of the EncryptedData. */
-    signature: Uint8Array;
 }
 
 // Add a dummy export that generates code

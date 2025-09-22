@@ -3,8 +3,8 @@
  * communicate with the backend microservices (key-service and routing-service).
  * These contracts decouple the core application logic from the network layer.
  */
-import type {SecureEnvelope} from "@/types/models";
-import type {URN} from "@/types/urn.ts";
+import type {SecureEnvelope, URN} from "@illmade-knight/action-intention-protos";
+
 /**
  * Defines the contract for a client that communicates with the go-key-service.
  */
@@ -35,6 +35,3 @@ export interface RoutingClient {
 
     receive(userId: URN): Promise<SecureEnvelope[]>;
 }
-
-// Add a dummy export that generates code
-export const version = '1.0.0';

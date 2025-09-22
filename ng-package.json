@@ -2,5 +2,9 @@
   "$schema": "./node_modules/ng-packagr/ng-package.schema.json",
   "lib": {
     "entryFile": "src/public-api.ts"
-  }
+  },
+  "allowedNonPeerDependencies": [
+    "@bufbuild/protobuf",
+    "@illmade-knight/action-intention-proto"
+  ]
 }
